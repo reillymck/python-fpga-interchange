@@ -1,11 +1,16 @@
-"""
-This material is based upon work supported  by the Office of Naval Research
-under Contract No. N68335-20-C-0569. Any opinions, findings and conclusions 
-or recommendations expressed in this material are those of the author(s) and 
-do not necessarily reflect the views of the Office of Naval Research.
-"""
-
-
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+#
+# This material is based upon work supported  by the Office of Naval Research
+# under Contract No. N68335-20-C-0569. Any opinions, findings and conclusions
+# or recommendations expressed in this material are those of the author(s) and
+# do not necessarily reflect the views of the Office of Naval Research.
+#
+# Use of this source code is governed by a ISC-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/ISC
+#
+# SPDX-License-Identifier: ISC
 """
 Code to generate XDLRC files based on the information provided in
 RapidWright interchange DeviceResources capnp device representations.
@@ -20,14 +25,14 @@ There are some differences between the ISE file and XDLRC file produced
 by this code.  They are outlined in the README.
 """
 
-
-
-
 from fpga_interchange.interchange_capnp import Interchange, read_capnp_file
 from fpga_interchange.device_resources import DeviceResources, convert_direction
 import sys
+
+
 class DummyFile():
     """Fake file"""
+
     def write(*args, **kwargs):
         return
 
@@ -72,7 +77,12 @@ class XDLRC(DeviceResources):
         """
         return tile.col
 
-    def __init__(self, device_resource, fileName='', family="", pkg="", grade=""):
+    def __init__(self,
+                 device_resource,
+                 fileName='',
+                 family="",
+                 pkg="",
+                 grade=""):
         """
         Initialize the XDLRC object.
         Parameters:
@@ -134,8 +144,8 @@ class XDLRC(DeviceResources):
                     pkg_options = []
                     for p in self.device_resource_capnp.packages:
                         pkg_options.append(self.strs[p.name])
-                    print(f"Warning: Invalid pkg: {pkg}\n Pkg options:"
-                          + f" {pkg_options}\n")
+                    print(f"Warning: Invalid pkg: {pkg}\n Pkg options:" +
+                          f" {pkg_options}\n")
                     sys.exit()
             if grade:
                 for g in self.pkg.grades:
@@ -146,8 +156,8 @@ class XDLRC(DeviceResources):
                     grade_options = []
                     for g in self.pkg.grades:
                         grade_options.append(self.strs[g.name])
-                    print(f"Warning: Invalid grade: {grade}\nGrade options: "
-                          + f"{grade_options}\n")
+                    print(f"Warning: Invalid grade: {grade}\nGrade options: " +
+                          f"{grade_options}\n")
                     sys.exit()
         else:
             self.pkg = None
@@ -204,8 +214,8 @@ class XDLRC(DeviceResources):
                     bond = "unknown "
             else:
                 bond = "internal "
-            xdlrc.write(f"\t\t(primitive_site {site_name} {site_t_name} "
-                        + f"{bond}{len(site_t.site_pins.keys())}\n")
+            xdlrc.write(f"\t\t(primitive_site {site_name} {site_t_name} " +
+                        f"{bond}{len(site_t.site_pins.keys())}\n")
 
             site_pins[site_t_name] = []
 
@@ -220,8 +230,8 @@ class XDLRC(DeviceResources):
                 direction = pin[3].name.lower()
                 num_pinwires += 1
                 pin_tile_wires.add(tile_wire)
-                xdlrc.write(f"\t\t\t(pinwire {pin_name} {direction} "
-                            + f"{tile_wire})\n")
+                xdlrc.write(f"\t\t\t(pinwire {pin_name} {direction} " +
+                            f"{tile_wire})\n")
 
                 site_pins[site_t_name].append(pin_name)
 
@@ -271,7 +281,8 @@ class XDLRC(DeviceResources):
 
         return num_wires
 
-    def _generate_pips(self, tile_name, tile, tile_type, tile_type_r, pips, site_pins):
+    def _generate_pips(self, tile_name, tile, tile_type, tile_type_r, pips,
+                       site_pins):
         """Generate Pips with routethroughs"""
 
         # Pointer for abbreviated reference
@@ -289,7 +300,8 @@ class XDLRC(DeviceResources):
                     site_info = tile_type_r.siteTypes[site.type]
                     conns = site_info.primaryPinsToTileWires
                     pins = raw_repr.siteTypeList[site_info.primaryType].pins
-                    site_t = self.strs[raw_repr.siteTypeList[site_info.primaryType].name]
+                    site_t = self.strs[raw_repr.siteTypeList[site_info.
+                                                             primaryType].name]
                     pin0 = ""
                     pin1 = ""
                     for idx, conn in enumerate(conns):
@@ -308,13 +320,10 @@ class XDLRC(DeviceResources):
                 self.route_throughs[site_t].add((pin0, pin1))
 
             if p.directional:
-                xdlrc.write(
-                    f"\t\t(pip {tile_name} {wire0} -> {wire1}{rt})\n")
+                xdlrc.write(f"\t\t(pip {tile_name} {wire0} -> {wire1}{rt})\n")
             else:
-                xdlrc.write(
-                    f"\t\t(pip {tile_name} {wire0} =- {wire1}{rt})\n")
-                xdlrc.write(
-                    f"\t\t(pip {tile_name} {wire1} =- {wire0}{rt})\n")
+                xdlrc.write(f"\t\t(pip {tile_name} {wire0} =- {wire1}{rt})\n")
+                xdlrc.write(f"\t\t(pip {tile_name} {wire1} =- {wire0}{rt})\n")
 
     def _generate_tile(self, tile):
         """
@@ -336,25 +345,26 @@ class XDLRC(DeviceResources):
         tile_type.wires = tile_type_r.wires
         pips = tile_type.pips
         num_sites = len(tile.sites)
-        xdlrc.write(f"\t(tile {tile.row} {tile.col} {tile_name} "
-                    + f"{tile_type.name} {num_sites}\n")
+        xdlrc.write(f"\t(tile {tile.row} {tile.col} {tile_name} " +
+                    f"{tile_type.name} {num_sites}\n")
 
         pin_tile_wires = set()
         # This is used for ROUTETHROUGH analysis
         site_pins = {}  # "site_t_name", [pins]
 
         # PRIMITIVE_SITE declarations
-        num_pinwires = self._generate_sites(tile.sites, tile_type_r,
-                                            site_pins, pin_tile_wires)
+        num_pinwires = self._generate_sites(tile.sites, tile_type_r, site_pins,
+                                            pin_tile_wires)
 
         # WIRE declarations
         tile_wires = set()
-        num_wires = self._generate_wires(tile_name, tile_wires, pin_tile_wires,
-                                         tile_type.string_index_to_wire_id_in_tile_type.keys())
+        num_wires = self._generate_wires(
+            tile_name, tile_wires, pin_tile_wires,
+            tile_type.string_index_to_wire_id_in_tile_type.keys())
 
         # PIP declaration
-        self._generate_pips(tile_name, tile, tile_type,
-                            tile_type_r, pips, site_pins)
+        self._generate_pips(tile_name, tile, tile_type, tile_type_r, pips,
+                            site_pins)
 
         # TILE_SUMMARY declaration
         xdlrc.write(f"\t\t(tile_summary {tile_name} {tile_type.name} ")
@@ -417,13 +427,12 @@ class XDLRC(DeviceResources):
             site_t_r = raw_repr.siteTypeList[site_t.site_type_index]
             site_wires = site_t_r.siteWires
 
-            xdlrc.write(f"\t(primitive_def {site_t.site_type} "
-                        + f"{len(site_t.site_pins)} {len(site_t.bels)}\n")
+            xdlrc.write(f"\t(primitive_def {site_t.site_type} " +
+                        f"{len(site_t.site_pins)} {len(site_t.bels)}\n")
             # PIN declaration
             for pin_name, pin in site_t.site_pins.items():
                 direction = pin[3].name.lower()
-                xdlrc.write(
-                    f"\t\t(pin {pin_name} {pin_name} {direction})\n")
+                xdlrc.write(f"\t\t(pin {pin_name} {pin_name} {direction})\n")
 
             # ELEMENT declaration
             for bel in site_t.bels:
@@ -469,29 +478,29 @@ class XDLRC(DeviceResources):
                                 bel_pin2_r.dir).name.lower()
                             if not direction:
                                 if direction2 == 'input':
-                                    xdlrc.write(f"\t\t\t(conn {bel.name} "
-                                                + f"{bel_pin_name} ==> "
-                                                + f"{bel2_name} "
-                                                + f"{bel_pin2_name})\n")
+                                    xdlrc.write(f"\t\t\t(conn {bel.name} " +
+                                                f"{bel_pin_name} ==> " +
+                                                f"{bel2_name} " +
+                                                f"{bel_pin2_name})\n")
                                 elif direction2 == 'inout':
-                                    xdlrc.write(f"\t\t\t(conn {bel.name} "
-                                                + f"{bel_pin_name} <== "
-                                                + f"{bel2_name} "
-                                                + f"{bel_pin2_name})\n")
-                                    xdlrc.write(f"\t\t\t(conn {bel.name} "
-                                                + f"{bel_pin_name} ==> "
-                                                + f"{bel2_name} "
-                                                + f"{bel_pin2_name})\n")
+                                    xdlrc.write(f"\t\t\t(conn {bel.name} " +
+                                                f"{bel_pin_name} <== " +
+                                                f"{bel2_name} " +
+                                                f"{bel_pin2_name})\n")
+                                    xdlrc.write(f"\t\t\t(conn {bel.name} " +
+                                                f"{bel_pin_name} ==> " +
+                                                f"{bel2_name} " +
+                                                f"{bel_pin2_name})\n")
                                 else:
-                                    xdlrc.write(f"\t\t\t(conn {bel.name} "
-                                                + f"{bel_pin_name} <== "
-                                                + f"{bel2_name} "
-                                                + f"{bel_pin2_name})\n")
+                                    xdlrc.write(f"\t\t\t(conn {bel.name} " +
+                                                f"{bel_pin_name} <== " +
+                                                f"{bel2_name} " +
+                                                f"{bel_pin2_name})\n")
                             elif direction2 != direction:
-                                xdlrc.write(f"\t\t\t(conn {bel.name} "
-                                            + f"{bel_pin_name} "
-                                            + f"{direction_str} {bel2_name}"
-                                            + f" {bel_pin2_name})\n")
+                                xdlrc.write(f"\t\t\t(conn {bel.name} " +
+                                            f"{bel_pin_name} " +
+                                            f"{direction_str} {bel2_name}" +
+                                            f" {bel_pin2_name})\n")
                 if add_cfg is not None:
                     xdlrc.write(
                         f"\t\t\t(cfg {' '.join(e for e in add_cfg)})\n")
@@ -515,9 +524,10 @@ class XDLRC(DeviceResources):
 
     def generate_footer(self):
         # SUMMARY
-        self.xdlrc.write(f"(summary tiles={len(self.tiles)} sites={self.num_sites} "
-                         + f"sitedefs={len(self.site_types)} "
-                         + f"numpins={self.num_pins} numpips={self.num_pips})\n)")
+        self.xdlrc.write(
+            f"(summary tiles={len(self.tiles)} sites={self.num_sites} " +
+            f"sitedefs={len(self.site_types)} " +
+            f"numpins={self.num_pins} numpips={self.num_pips})\n)")
 
 
 def argparse_setup():
@@ -526,22 +536,24 @@ def argparse_setup():
     parser = argparse.ArgumentParser(
         description="Generate XLDRC file and check for accuracy")
     parser.add_argument("SCHEMA", help="Location of CapnProto Device Schema")
-    parser.add_argument("DEVICE",
-                        help="Interchange-CapnProto device representation")
+    parser.add_argument(
+        "DEVICE", help="Interchange-CapnProto device representation")
     parser.add_argument(
         "FAMILY", help="The family of the part", default="artix7")
     parser.add_argument("PKG", help="Name of part package", default="csg324")
     parser.add_argument("GRADE", help="Speed grade of part", default="-1")
-    parser.add_argument("FILE", help="Name of output XDLRC file",
-                        nargs='?', default="")
-    parser.add_argument("-x", "--extra", help="Generate XDLRC+ file",
-                        action="store_true")
+    parser.add_argument(
+        "FILE", help="Name of output XDLRC file", nargs='?', default="")
+    parser.add_argument(
+        "-x", "--extra", help="Generate XDLRC+ file", action="store_true")
     parser.add_argument("--no-rt", help="Exclude Routethroughs from Elements")
     group = parser.add_mutually_exclusive_group()
+    group.add_argument("-t", "--tile", help="Generate XDLRC for a single tile")
     group.add_argument(
-        "-t", "--tile", help="Generate XDLRC for a single tile")
-    group.add_argument("-p", "--prim-defs",
-                       help="Generate XDLRC for Primitive_Defs only", action="store_true")
+        "-p",
+        "--prim-defs",
+        help="Generate XDLRC for Primitive_Defs only",
+        action="store_true")
     return parser.parse_args()
 
 
@@ -549,8 +561,9 @@ if __name__ == "__main__":
     args = argparse_setup()
 
     device_schema = Interchange(args.SCHEMA).device_resources_schema.Device
-    device = XDLRC(read_capnp_file(device_schema, open(args.DEVICE, "rb")),
-                   args.FILE, args.FAMILY, args.PKG, args.GRADE)
+    device = XDLRC(
+        read_capnp_file(device_schema, open(args.DEVICE, "rb")), args.FILE,
+        args.FAMILY, args.PKG, args.GRADE)
 
     if args.no_rt:
         device.skip_routethru = True

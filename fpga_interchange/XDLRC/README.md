@@ -1,74 +1,18 @@
 This material is based upon work supported  by the Office of Naval Research under Contract No. N68335-20-C-0569. Any opinions, findings and conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the Office of Naval Research.
 <br><br><br>
 
-## Dependencies:
-* Python3.9
-* RapidWright/interchange (setup below)
-* Capnp (setup below)
+# XDLRC Generator
+## Background
+With Xilinx ISE, a text file representation was provided of the fpga device. This format is known
+as XDLRC. The XDLRC representation is not provided by Xilinx for any devices created since ISE was
+replaced with Vivado. However, there exists legacy tools that take device structure input in the form
+of an XDLRC file. This code is written to output the information found in an interchange device resources
+file as an XDLRC file. However, due to changes in how Xilinx represents devices, one will find that the
+produced XDLRC file may have different information than expected. These are detailed below. 
 
-### Setup Capnp & RapidWright/interchange
-To correctly install RapidWright/interchange and dependencies on Ubuntu 18.04/20.04 
-RapidWright/interchange commit: 81366d2  
-CapnProto-C++: 0.9.1  
-CapnProto-Java commit: 2f7ce18 
-CapnProto-Python version: 1.1.0
-Java: openjdk-11-jre (it is assumed that this is installed)
-
-#### Dependencies:
-* CapnProto <br>
-First install CapnProto. The base installation instructions are located [here](https://capnproto.org/install.html).
-They are copied below for convenience. They can be executed in the /tmp directory.
-
-From Release Tarball:
-
-You may download and install the release version of Cap’n Proto like so:
-```
-curl -O https://capnproto.org/capnproto-c++-0.9.1.tar.gz
-tar zxf capnproto-c++-0.9.1.tar.gz
-cd capnproto-c++-0.9.1
-./configure
-make -j6 check
-sudo make install
-```
-This will install capnp, the Cap’n Proto command-line tool. It will also install libcapnp,
-libcapnpc, and libkj in /usr/local/lib and headers in /usr/local/include/capnp and /usr/local/include/kj.
-
-* CapnProto-Java <br>
-Next, install the CapnProto-Java extenstion. These instructions are based on the github ci that YosysHQ uses to build interchange, found [here](https://github.com/YosysHQ/nextpnr/blob/master/.github/ci/build_interchange.sh#L16)
-
-```
-git clone https://github.com/capnproto/capnproto-java.git
-pushd capnproto-java
-make -j`nproc`
-sudo make install
-popd
-```
-
-* CapnProto-Python <br>
-In your environment of choice run:
-```
-pip3 install pycapnp
-```
-
-#### Install RapidWright/interchange
-Most of the following instructions come from the README.md for the RapidWright/interchange project located [here](https://github.com/Xilinx/RapidWright/tree/interchange/interchange).
-These commands are best ran somewhere in your home directory.
-
-* Easiest way to Setup a RapidWright Repo Locally:
-```
-wget http://www.rapidwright.io/docs/_downloads/rapidwright-installer.jar
-java -jar rapidwright-installer.jar -t
-source rapidwright.sh
-cd RapidWright
-```
-More details here:
-http://www.rapidwright.io/docs/Automatic_Install.html#automatic-install
-
-* Finish setting up interchange
-```
-cd interchange && make && cd ..
-make
-```
+In the tests directory there is test code to compare the information found in an ISE XDLRC file with
+the information provided in the interchange device resources representation. The information accessible
+in Vivado through tcl is used to decide which format is correct when the two differ.
 
 
 ## XDLRC Generation 

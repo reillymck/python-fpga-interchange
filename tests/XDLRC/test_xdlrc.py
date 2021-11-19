@@ -1,11 +1,16 @@
-"""
-This material is based upon work supported  by the Office of Naval Research
-under Contract No. N68335-20-C-0569. Any opinions, findings and conclusions 
-or recommendations expressed in this material are those of the author(s) and 
-do not necessarily reflect the views of the Office of Naval Research.
-"""
-
-
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+#
+# This material is based upon work supported  by the Office of Naval Research
+# under Contract No. N68335-20-C-0569. Any opinions, findings and conclusions
+# or recommendations expressed in this material are those of the author(s) and
+# do not necessarily reflect the views of the Office of Naval Research.
+#
+# Use of this source code is governed by a ISC-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/ISC
+#
+# SPDX-License-Identifier: ISC
 """
 Functions for comparing two XDLRC files.
 Used to test DeviceResources.generate_xdlrc().  Generates and checks for
@@ -31,7 +36,6 @@ tracked separately from errors and stored in the text file
 XDLRC_Exceptions.txt.
 """
 
-
 from collections import namedtuple, OrderedDict
 import enum
 import json
@@ -39,8 +43,7 @@ import sys
 import time
 import os
 import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # nopep8
-from XDLRC import XDLRC  # nopep8
+from fpga_interchange.XDLRC.XDLRC import XDLRC  # nopep8
 from fpga_interchange.interchange_capnp import Interchange, read_capnp_file, CompressionFormat  # nopep8
 
 global myDevice
@@ -50,9 +53,9 @@ FAMILY = "artix7"
 PKG = "csg324"
 GRADE = "-1"
 TEST_XDLRC = 'xc7a100t.xdlrc'
-CORRECT_XDLRC = '/home/reilly/xc7a100t.xdlrc'
-SCHEMA_DIR = "/home/reilly/RapidWright/interchange/fpga-interchange-schema/interchange"  # noqa
-DEVICE_FILE = "/home/reilly/xc7a100t.device"
+CORRECT_XDLRC = 'xc7a100t.xdlrc'
+SCHEMA_DIR = "RapidWright/interchange/fpga-interchange-schema/interchange"  # noqa
+DEVICE_FILE = "xc7a100t.device"
 
 #  Filename of JSON dict:
 #    {tile_name:{
@@ -65,25 +68,51 @@ VIVADO_INFO = "xc7a100tcsg324_info.json"
 TCL_FILE_OUT = "WireArray.tcl"
 ###############################################################################
 
-KeyWords = namedtuple('KeyWords', 'comment tiles tile wire conn summary pip site pinwire prim_defs prim_def element cfg pin header tile_summary route_thru')  # noqa
+KeyWords = namedtuple(
+    'KeyWords',
+    'comment tiles tile wire conn summary pip site pinwire prim_defs prim_def element cfg pin header tile_summary route_thru'
+)  # noqa
 
 # Dictionary contains XDLRC declarations as keys and expected token length
 # as values
-XDLRC_KEY_WORD = {'#': 0, 'TILES': 3, 'TILE': 6, 'WIRE': 3, 'CONN': 6,
-                  'TILE_SUMMARY': 6, 'PIP': 4, 'PRIMITIVE_SITE': 5,
-                  'PINWIRE': 4, 'PRIMITIVE_DEFS': 2, 'PRIMITIVE_DEF': 3,
-                  'ELEMENT': 3, 'CFG': 0, 'PIN': 4, 'XDL_RESOURCE_REPORT': 0,
-                  'SUMMARY': 6, '_ROUTETHROUGH': 2}
+XDLRC_KEY_WORD = {
+    '#': 0,
+    'TILES': 3,
+    'TILE': 6,
+    'WIRE': 3,
+    'CONN': 6,
+    'TILE_SUMMARY': 6,
+    'PIP': 4,
+    'PRIMITIVE_SITE': 5,
+    'PINWIRE': 4,
+    'PRIMITIVE_DEFS': 2,
+    'PRIMITIVE_DEF': 3,
+    'ELEMENT': 3,
+    'CFG': 0,
+    'PIN': 4,
+    'XDL_RESOURCE_REPORT': 0,
+    'SUMMARY': 6,
+    '_ROUTETHROUGH': 2
+}
 
-XDLRC_KEY_WORD_KEYS = KeyWords(comment='#', tiles='TILES', tile='TILE',
-                               wire='WIRE', conn='CONN',
-                               tile_summary='TILE_SUMMARY', pip='PIP',
-                               site='PRIMITIVE_SITE', pinwire='PINWIRE',
-                               prim_defs='PRIMITIVE_DEFS',
-                               prim_def='PRIMITIVE_DEF', element='ELEMENT',
-                               cfg='CFG', pin='PIN',
-                               header='XDL_RESOURCE_REPORT', summary='SUMMARY',
-                               route_thru="_ROUTETHROUGH")
+XDLRC_KEY_WORD_KEYS = KeyWords(
+    comment='#',
+    tiles='TILES',
+    tile='TILE',
+    wire='WIRE',
+    conn='CONN',
+    tile_summary='TILE_SUMMARY',
+    pip='PIP',
+    site='PRIMITIVE_SITE',
+    pinwire='PINWIRE',
+    prim_defs='PRIMITIVE_DEFS',
+    prim_def='PRIMITIVE_DEF',
+    element='ELEMENT',
+    cfg='CFG',
+    pin='PIN',
+    header='XDL_RESOURCE_REPORT',
+    summary='SUMMARY',
+    route_thru="_ROUTETHROUGH")
 
 
 class Vivado():
@@ -159,10 +188,10 @@ class ErrorHandle():
         ErrorHandle.error_f = open(ErrorHandle.XDLRC_Errors, "w")
         ErrorHandle.exception_f = open(ErrorHandle.XDLRC_Exceptions, "w")
         ErrorHandle.exception_f.write(
-            "Line numbers are expressed CORRECT_XDLRC:TEST_XDLRC\n"
-            + "Some errors are not applicable to both files. These are "
-            + "expressed with the appropriate side of the colon empty.\n"
-            + "See XDLRC.py for further explanation of file contents\n\n\n")
+            "Line numbers are expressed CORRECT_XDLRC:TEST_XDLRC\n" +
+            "Some errors are not applicable to both files. These are " +
+            "expressed with the appropriate side of the colon empty.\n" +
+            "See XDLRC.py for further explanation of file contents\n\n\n")
 
     def err_print(self, str_in):
         ErrorHandle.errors += 1
@@ -237,8 +266,8 @@ def get_line(*argv):
                     ErrorHandle.unknowns.append(line[0])
                 continue
 
-            elif (key_word[0] != XDLRC_KEY_WORD_KEYS.comment and
-                  key_word != XDLRC_KEY_WORD_KEYS.header):
+            elif (key_word[0] != XDLRC_KEY_WORD_KEYS.comment
+                  and key_word != XDLRC_KEY_WORD_KEYS.header):
 
                 # Make sure token is appropriate length
                 expected_len = XDLRC_KEY_WORD[line[0]]
@@ -331,7 +360,8 @@ class Pip(namedtuple('Pip', 'wire0, wire1, dir')):
         return (self.wire0 == other.wire0) and (self.wire1 == other.wire1)
 
 
-class TileStruct(namedtuple('TileStruct', 'name type wires pips sites route_thru')):
+class TileStruct(
+        namedtuple('TileStruct', 'name type wires pips sites route_thru')):
     """
     Lightweight class for holding XDLRC tile information.
     __eq__() is overridden for accurate comparison.  It is important to
@@ -421,12 +451,12 @@ class TileStruct(namedtuple('TileStruct', 'name type wires pips sites route_thru
                         err.ex_print("EXTRA_WIRE_CONN_EXCEPTION (Conn 011)",
                                      f"Wire: {wire} Conn: {conn}")
                     elif vivado.wire(conn[0], conn[1]):
-                        err.ex_print(
-                            "NODELESS_WIRE_EXCEPTION 101", f"Wire {conn}")
+                        err.ex_print("NODELESS_WIRE_EXCEPTION 101",
+                                     f"Wire {conn}")
                         vivado.tcl_print(f"{conn[0]}/{conn[1]}")
                     else:
-                        err.err_print(f"Missing conn {conn} for "
-                                      + f"wire {wire} 101")
+                        err.err_print(f"Missing conn {conn} for " +
+                                      f"wire {wire} 101")
                 else:
                     if conn in all_conns[0]:
                         err.err_print(f"Extra conn {conn} for wire {wire} 010")
@@ -443,16 +473,16 @@ class TileStruct(namedtuple('TileStruct', 'name type wires pips sites route_thru
                 for wire1, data in self.pips[wire0].items():
                     pip_dir = data[0]
                     rt = data[1]
-                    if (vivado.pip(self.name, wire0, wire1) or
-                            vivado.pip(self.name, wire1, wire0)):
-                        err.ex_print("EXTRA_PIP_EXCEPTION 011",
-                                     f"Pip {wire0} {pip_dir} "
-                                     + f"{wire1} ROUTETHRU: {rt}")
+                    if (vivado.pip(self.name, wire0, wire1)
+                            or vivado.pip(self.name, wire1, wire0)):
+                        err.ex_print(
+                            "EXTRA_PIP_EXCEPTION 011",
+                            f"Pip {wire0} {pip_dir} " +
+                            f"{wire1} ROUTETHRU: {rt}")
                         if rt is not None:
                             self.route_thru.add(rt)
                     else:
-                        err.err_print(
-                            f"Extra Pip {wire0} {wire1}")
+                        err.err_print(f"Extra Pip {wire0} {wire1}")
             else:
                 for wire1, data in self.pips[wire0].items():
                     pip = f"{wire0} {data[0]} {wire1} ROUTETHRU: {data[1]}"
@@ -479,8 +509,7 @@ class TileStruct(namedtuple('TileStruct', 'name type wires pips sites route_thru
                     pip0 = f"{wire0} {data0[0]} {wire1} ROUTETHRU: {data0[1]}"
                     pip1 = f"{wire0} {data1[0]} {wire1} ROUTETHRU: {data1[1]}"
                     if data0[1] and not data1[1]:
-                        err.err_print(
-                            f"Extra Routethrough Pip0: {pip0}")
+                        err.err_print(f"Extra Routethrough Pip0: {pip0}")
                     elif not data0[1] and data1[1]:
                         err.err_print(f"Missing Routethrough Pip1: {pip0}")
                     else:
@@ -492,16 +521,16 @@ class TileStruct(namedtuple('TileStruct', 'name type wires pips sites route_thru
                     data = self.pips[wire0][wire1]
                     pip_dir = data[0]
                     rt = data[1]
-                    if (vivado.pip(self.name, wire0, wire1) or
-                            vivado.pip(self.name, wire1, wire0)):
-                        err.ex_print("EXTRA_PIP_EXCEPTION 011",
-                                     f"Pip {wire0} {pip_dir} "
-                                     + f"{wire1} ROUTETHRU: {rt}")
+                    if (vivado.pip(self.name, wire0, wire1)
+                            or vivado.pip(self.name, wire1, wire0)):
+                        err.ex_print(
+                            "EXTRA_PIP_EXCEPTION 011",
+                            f"Pip {wire0} {pip_dir} " +
+                            f"{wire1} ROUTETHRU: {rt}")
                         if rt is not None:
                             self.route_thru.add(rt)
                     else:
-                        err.err_print(
-                            f"Extra Pip {wire0} {wire1}")
+                        err.err_print(f"Extra Pip {wire0} {wire1}")
                 else:
                     data = other.pips[wire0][wire1]
                     pip = f"{wire0} {data[0]} {wire1} ROUTETHRU: {data[1]}"
@@ -529,8 +558,9 @@ class TileStruct(namedtuple('TileStruct', 'name type wires pips sites route_thru
                     common_sites.add(site0[0])
                     other_sites[site1[0]] = site1[1]
                 elif vivado.site(self.name, site0[0].split()[0]):
-                    err.ex_print(f"SITE_NAME_EXCEPTION",
-                                 f"Considering {site0[0]} to equal {site1[0]}")
+                    err.ex_print(
+                        f"SITE_NAME_EXCEPTION",
+                        f"Considering {site0[0]} to equal {site1[0]}")
                     other_sites[site0[0]] = site1[1]
                     common_sites.add(site0[0])
             other.sites.update(other_sites)
@@ -580,8 +610,9 @@ def build_tile_db(f, tileName, typeStr):
                     err.ex_print(f"Unknown pip declaration {f.line}")
                     tile.pips[f.line[2]][f.line[4]] = (f.line[3], None)
                 else:
-                    tile.pips[f.line[2]][f.line[4]] = (f.line[3], (
-                        rt[1], rt[2], f.line[6]))
+                    tile.pips[f.line[2]][f.line[4]] = (f.line[3],
+                                                       (rt[1], rt[2],
+                                                        f.line[6]))
             else:
                 tile.pips[f.line[2]][f.line[4]] = (f.line[3], None)
             get_line(f)
@@ -592,17 +623,15 @@ def build_tile_db(f, tileName, typeStr):
             pin_wires = tile.sites[sites_key]
 
             get_line(f)
-            while (f.line and
-                   (f.line[0] == XDLRC_KEY_WORD_KEYS.pinwire)):
+            while (f.line and (f.line[0] == XDLRC_KEY_WORD_KEYS.pinwire)):
 
                 direction = Direction.convert(f.line[2])
-                pin_wires.append(
-                    PinWire(f.line[1], direction, f.line[3]))
+                pin_wires.append(PinWire(f.line[1], direction, f.line[3]))
                 get_line(f)
         else:
-            error_str = ("Error: build_tile_db() hit default branch\n"
-                         + "This should not happen if XDLRC files are equal\n"
-                         + f"Line {f.line_num}: {f.line}\n")
+            error_str = ("Error: build_tile_db() hit default branch\n" +
+                         "This should not happen if XDLRC files are equal\n" +
+                         f"Line {f.line_num}: {f.line}\n")
             err.err_print(error_str)
             sys.exit()
 
@@ -627,8 +656,7 @@ class Conn(namedtuple('Conn', 'bel1 belpin1 bel2 belpin2')):
         if type(self) != type(other):
             return False
 
-        return ((self.bel1 == other.bel1)
-                and (self.bel2 == other.bel2)
+        return ((self.bel1 == other.bel1) and (self.bel2 == other.bel2)
                 and (self.belpin1 == other.belpin1)
                 and (self.belpin2 == other.belpin2))
 
@@ -709,7 +737,8 @@ class Element(namedtuple('Element', 'name pins conns cfg')):
                                  f"Element: {self.name} CFG: {self.cfg}")
                 else:
                     err.err_print(
-                        f"CFG mismatch Element: {self.name} {self.cfg} {other.cfg}")
+                        f"CFG mismatch Element: {self.name} {self.cfg} {other.cfg}"
+                    )
 
         return tmp_err == ErrorHandle.errors
 
@@ -744,8 +773,8 @@ class PrimDef(namedtuple('PrimDef', 'name pins elements')):
         err = ErrorHandle()
         ErrorHandle._header = f"Prim_Def {self.name}"
         if self.name != other.name:
-            err.err_print("Fatal Error: Primitive Def name mismatch\n"
-                          + f"Name1: {self.name} Name2: {other.name}")
+            err.err_print("Fatal Error: Primitive Def name mismatch\n" +
+                          f"Name1: {self.name} Name2: {other.name}")
             return False
 
         tmp_err = ErrorHandle.errors
@@ -822,16 +851,18 @@ def build_prim_def_db(f, name):
                 while f.line:
                     if f.line[0] == XDLRC_KEY_WORD_KEYS.pin:
                         element.pins.append(
-                            PinWire(f.line[1],
-                                    Direction.convert(f.line[2]), ''))
+                            PinWire(f.line[1], Direction.convert(f.line[2]),
+                                    ''))
                         get_line(f)
                     elif f.line[0] == XDLRC_KEY_WORD_KEYS.conn:
                         if f.line[3] == '==>':
-                            element.conns.append(Conn(f.line[1], f.line[2],
-                                                      f.line[4], f.line[5]))
+                            element.conns.append(
+                                Conn(f.line[1], f.line[2], f.line[4],
+                                     f.line[5]))
                         else:
-                            element.conns.append(Conn(f.line[4], f.line[5],
-                                                      f.line[1], f.line[2]))
+                            element.conns.append(
+                                Conn(f.line[4], f.line[5], f.line[1],
+                                     f.line[2]))
                         get_line(f)
                     elif f.line[0] == XDLRC_KEY_WORD_KEYS.cfg:
                         element.cfg.extend(f.line[1:])
@@ -845,8 +876,8 @@ def build_prim_def_db(f, name):
         elif f.line[0] == XDLRC_KEY_WORD_KEYS.cfg:
             get_line(f)
         else:
-            err.err_print(f"Error: build_prim_def_db hit default branch\n"
-                          + f"Check syntax on line {f.line_num}")
+            err.err_print(f"Error: build_prim_def_db hit default branch\n" +
+                          f"Check syntax on line {f.line_num}")
             get_line(f)
 
     return prim_def
@@ -874,11 +905,13 @@ def compare_tile(f1, f2):
     err = ErrorHandle()
     ErrorHandle._header = f"Tile: {tile1.name}"
     if f1.line[4] != f2.line[4]:
-        err.ex_print("SUMMARY_WIRE_EXCEPTION", f"line {f2.line_num}:"
-                     + f"{f1.line_num} summary wire count mismatch")
+        err.ex_print(
+            "SUMMARY_WIRE_EXCEPTION", f"line {f2.line_num}:" +
+            f"{f1.line_num} summary wire count mismatch")
     elif f1.line[5] != f2.line[5]:
-        err.ex_print("EXTRA_PIP_EXCEPTION", f"line {f2.line_num}:{f1.line_num} "
-                     + f"summary pip count mismatch")
+        err.ex_print(
+            "EXTRA_PIP_EXCEPTION", f"line {f2.line_num}:{f1.line_num} " +
+            f"summary pip count mismatch")
     else:
         assert_equal(f1.line, f2.line)
 
@@ -897,15 +930,18 @@ def compare_prim_defs(f1, f2, extra_rt=set()):
 
     # Check primitive_defs declaration
     if f1.line != f2.line:
-        err.ex_print("PRIM_DEF_GENERAL_EXCEPTION",
-                     f"line {f2.line_num}:{f1.line_num} PRIMITIVE_DEFS count mismatch")
+        err.ex_print(
+            "PRIM_DEF_GENERAL_EXCEPTION",
+            f"line {f2.line_num}:{f1.line_num} PRIMITIVE_DEFS count mismatch")
     get_line(f1, f2)
 
     # Primitive_def checks
     while f1.line and f2.line and f1.line[0] != XDLRC_KEY_WORD_KEYS.summary:
         while f2.line[1] != f1.line[1]:  # Not all ISE prim defs represented
-            err.ex_print("PRIM_DEF_GENERAL_EXCEPTION",
-                         f"caught on line {f2.line_num}. PRIMITIVE_DEF {f2.line[1]} missing.")
+            err.ex_print(
+                "PRIM_DEF_GENERAL_EXCEPTION",
+                f"caught on line {f2.line_num}. PRIMITIVE_DEF {f2.line[1]} missing."
+            )
             get_line(f2)
             while f2.line[0] != XDLRC_KEY_WORD_KEYS.prim_def:
                 get_line(f2)
@@ -968,40 +1004,54 @@ def init(fileName='', device_file=DEVICE_FILE, schema_dir=SCHEMA_DIR):
     """
 
     device_schema = Interchange(SCHEMA_DIR).device_resources_schema.Device
-    return XDLRC(read_capnp_file(device_schema, open(device_file, "rb"), CompressionFormat.GZIP, False), fileName, FAMILY, PKG, GRADE)
+    return XDLRC(
+        read_capnp_file(device_schema, open(device_file, "rb"),
+                        CompressionFormat.GZIP, False), fileName, FAMILY, PKG,
+        GRADE)
 
 
 def argparse_setup():
     """Setup argparse and return parsed arguements."""
     import argparse
     parser = argparse.ArgumentParser(
-        description="Generate XLDRC file and check for accuracy. The most "
-        + "accurate comparison is a full comparison of the two files since the "
-        + "test code uses information gathered from previous XDLRC sections "
-        + "to accurately assess differences encountered in later sections. ")
-    parser.add_argument("TEST_XDLRC", help="XDLRC file to test for accuracy",
-                        nargs='?', default=TEST_XDLRC)
-    parser.add_argument("CORRECT_XDLRC",
-                        help="Correct XDLRC file to compare against",
-                        nargs='?', default=CORRECT_XDLRC)
-    parser.add_argument("DEVICE",
-                        help="DeviceResources capnp file to use for XDLRC generation",
-                        nargs='?', default=DEVICE_FILE)
-    parser.add_argument("SCHEMAS",
-                        help="Location of interchange capnp schemas for XDLRC generation",
-                        nargs='?', default=SCHEMA_DIR)
-    parser.add_argument("DIR", help="Directory where files are located",
-                        nargs='?', default='')
+        description="Generate XLDRC file and check for accuracy. The most " +
+        "accurate comparison is a full comparison of the two files since the "
+        + "test code uses information gathered from previous XDLRC sections " +
+        "to accurately assess differences encountered in later sections. ")
+    parser.add_argument(
+        "TEST_XDLRC",
+        help="XDLRC file to test for accuracy",
+        nargs='?',
+        default=TEST_XDLRC)
+    parser.add_argument(
+        "CORRECT_XDLRC",
+        help="Correct XDLRC file to compare against",
+        nargs='?',
+        default=CORRECT_XDLRC)
+    parser.add_argument(
+        "DEVICE",
+        help="DeviceResources capnp file to use for XDLRC generation",
+        nargs='?',
+        default=DEVICE_FILE)
+    parser.add_argument(
+        "SCHEMAS",
+        help="Location of interchange capnp schemas for XDLRC generation",
+        nargs='?',
+        default=SCHEMA_DIR)
+    parser.add_argument(
+        "DIR", help="Directory where files are located", nargs='?', default='')
     parser.add_argument("--ex", help="Name of known exception file")
     parser.add_argument("-e", help="Name of error output file")
     group = parser.add_mutually_exclusive_group()
-    group.add_argument("-t", "--tile", help="Parse files as single tile",
-                       action="store_true")
-    group.add_argument("-p", "--prim-defs",
-                       help="Parse files as primitive_defs only",
-                       action="store_true")
-    group.add_argument("--no-gen", help="Do not generate XDLRC file",
-                       action="store_true")
+    group.add_argument(
+        "-t", "--tile", help="Parse files as single tile", action="store_true")
+    group.add_argument(
+        "-p",
+        "--prim-defs",
+        help="Parse files as primitive_defs only",
+        action="store_true")
+    group.add_argument(
+        "--no-gen", help="Do not generate XDLRC file", action="store_true")
     return parser.parse_args()
 
 
@@ -1009,7 +1059,7 @@ if __name__ == "__main__":
     args = argparse_setup()
 
     if not args.no_gen and not (args.tile or args.prim_defs):
-        myDevice = init(args.DIR+args.TEST_XDLRC, args.DEVICE, args.SCHEMAS)
+        myDevice = init(args.DIR + args.TEST_XDLRC, args.DEVICE, args.SCHEMAS)
         start = time.time()
         myDevice.generate_XDLRC()
         finish = time.time() - start
@@ -1024,25 +1074,25 @@ if __name__ == "__main__":
 
     err = ErrorHandle()
     err.setup()
-    with (open(args.DIR+args.TEST_XDLRC, "r") as f1,
-          open(args.DIR+args.CORRECT_XDLRC, "r") as f2):
+    f1 = open(args.DIR + args.TEST_XDLRC, "r")
+    f2 = open(args.DIR + args.CORRECT_XDLRC, "r")
 
-        file_init(f1, f2)
-        vivado = Vivado()
-        vivado.setup()
+    file_init(f1, f2)
+    vivado = Vivado()
+    vivado.setup()
 
-        start = time.time()
+    start = time.time()
 
-        if args.tile:
-            compare_tile(f1, f2)
-        elif args.prim_defs:
-            compare_prim_defs(f1, f2)
-        else:
-            compare_xdlrc(f1, f2)
+    if args.tile:
+        compare_tile(f1, f2)
+    elif args.prim_defs:
+        compare_prim_defs(f1, f2)
+    else:
+        compare_xdlrc(f1, f2)
 
-        finish = time.time() - start
-        print(f"XDLRC compared in {finish} seconds")
-        vivado.cleanup()
+    finish = time.time() - start
+    print(f"XDLRC compared in {finish} seconds")
+    vivado.cleanup()
 
     err.cleanup()
     print(f"Done comparing XDLRC files. Errors: {ErrorHandle.errors}")
