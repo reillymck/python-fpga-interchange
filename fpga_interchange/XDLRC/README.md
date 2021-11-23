@@ -60,9 +60,8 @@ words to denote more information.
 | alternate_site_types | Right before the "tiles" declaration | Lists the alternate sites for the first site |
 
 ## Differences Between ISE XDLRC and Interchange XDLRC
-The following list breaks down the 
-full list of differences between ISE XDLRC and interchange XDLRC differences 
-and their frequencies are listed as follows <i>Discrepancy (Occurences)</i>:
+The following list breaks down the differences between ISE XDLRC and interchange XDLRC when comparing the
+representations for the xc7a100tcsg324-1 part are listed as follows <i>Discrepancy (Occurences)</i>:
   * CARRY4_EXCEPTION (130):<br> 
     In Vivado and Interchange, with SLICELs and SLICEMs
     there are elements in addition to the CARRY4, like CARRY4_XOR, that are
@@ -160,5 +159,6 @@ and their frequencies are listed as follows <i>Discrepancy (Occurences)</i>:
     primitive_defs for all 7-series parts, regardless of if they are used on 
     the specific chip.
 
+## Acknowledgement
 This material is based upon work supported  by the Office of Naval Research under Contract No. N68335-20-C-0569. Any opinions, findings and conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the Office of Naval Research.
 <br><br><br>
