@@ -1,8 +1,8 @@
 # XDLRC Generator
 ## Background
 With Xilinx ISE, a text file representation was provided of the fpga device. This format is known
-as XDLRC. The XDLRC representation is not provided by Xilinx for any devices created since ISE was
-replaced with Vivado. However, there exist legacy tools that take device structure input in the form
+as XDLRC. The XDLRC representation is not provided by Xilinx for any devices newer than 7 Series. 
+However, there exist legacy tools that take device structure input in the form
 of an XDLRC file. This code is written to output the information found in an interchange device resources
 file as an XDLRC file to support such legacy tools. 
 
