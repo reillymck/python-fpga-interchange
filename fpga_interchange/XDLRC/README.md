@@ -2,10 +2,14 @@
 ## Background
 With Xilinx ISE, a text file representation was provided of the fpga device. This format is known
 as XDLRC. The XDLRC representation is not provided by Xilinx for any devices created since ISE was
-replaced with Vivado. However, there exists legacy tools that take device structure input in the form
+replaced with Vivado. However, there exist legacy tools that take device structure input in the form
 of an XDLRC file. This code is written to output the information found in an interchange device resources
-file as an XDLRC file. However, due to changes in how Xilinx represents devices, one will find that the
-produced XDLRC file may have different information than expected. These differences are detailed below. 
+file as an XDLRC file to support such legacy tools. 
+
+However, due to slight differences in how Vivado and ISE represent devices, one will find that the
+produced XDLRC file may have different information than expected. Interchange device resources representations
+tend to include more information than found in ISE XDLRC such as additional wires, pips, and connections. 
+These differences are detailed below. 
 
 In the tests directory there is test code to compare the information found in an ISE XDLRC file with
 the information provided in the interchange device resources representation. The information accessible
