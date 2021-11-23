@@ -1,6 +1,3 @@
-This material is based upon work supported  by the Office of Naval Research under Contract No. N68335-20-C-0569. Any opinions, findings and conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the Office of Naval Research.
-<br><br><br>
-
 # XDLRC Generator
 ## Background
 With Xilinx ISE, a text file representation was provided of the fpga device. This format is known
@@ -8,7 +5,7 @@ as XDLRC. The XDLRC representation is not provided by Xilinx for any devices cre
 replaced with Vivado. However, there exists legacy tools that take device structure input in the form
 of an XDLRC file. This code is written to output the information found in an interchange device resources
 file as an XDLRC file. However, due to changes in how Xilinx represents devices, one will find that the
-produced XDLRC file may have different information than expected. These are detailed below. 
+produced XDLRC file may have different information than expected. These differences are detailed below. 
 
 In the tests directory there is test code to compare the information found in an ISE XDLRC file with
 the information provided in the interchange device resources representation. The information accessible
@@ -162,3 +159,6 @@ and their frequencies are listed as follows <i>Discrepancy (Occurences)</i>:
     shows up in ISE's XDLRC for xc7a100tcsg-1. It seems that ISE prints the 
     primitive_defs for all 7-series parts, regardless of if they are used on 
     the specific chip.
+
+This material is based upon work supported  by the Office of Naval Research under Contract No. N68335-20-C-0569. Any opinions, findings and conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the Office of Naval Research.
+<br><br><br>
