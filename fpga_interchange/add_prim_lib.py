@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2021  The SymbiFlow Authors.
+# Copyright (C) 2021  The F4PGA Authors.
 #
 # Use of this source code is governed by a ISC-style
 # license that can be found in the LICENSE file or at
@@ -79,7 +79,7 @@ def main():
             offset = port_data.get('offset', 0)
             upto = port_data.get('upto', False)
 
-            if is_bus(port_data['bits'], offset, upto):
+            if is_bus(port_name, port_data['bits'], offset, upto):
                 end = offset
                 start = offset + len(port_data['bits']) - 1
 

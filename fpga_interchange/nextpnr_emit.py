@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2020  The SymbiFlow Authors.
+# Copyright (C) 2020  The F4PGA Authors.
 #
 # Use of this source code is governed by a ISC-style
 # license that can be found in the LICENSE file or at
@@ -24,6 +24,11 @@ def main():
     parser.add_argument('--output_dir', required=True)
     parser.add_argument('--device', required=True)
     parser.add_argument('--device_config', required=True)
+    parser.add_argument(
+        '--suffix',
+        type=str,
+        default=None,
+        help="An optional suffix to append to output file names")
 
     args = parser.parse_args()
     interchange = Interchange(args.schema_dir)
@@ -41,7 +46,12 @@ def main():
 
     chip_info = populate_chip_info(device, const_ids, device_config)
 
-    with open(os.path.join(args.output_dir, 'chipdb.bba'), 'w') as f:
+    if args.suffix:
+        fname = 'chipdb-{}.bba'.format(args.suffix)
+    else:
+        fname = 'chipdb.bba'
+
+    with open(os.path.join(args.output_dir, fname), 'w') as f:
         bba = BbaWriter(f, const_ids)
         bba.pre("#include \"nextpnr.h\"")
         bba.pre("NEXTPNR_NAMESPACE_BEGIN")
@@ -64,7 +74,12 @@ def main():
 
     bba.check_labels()
 
-    with open(os.path.join(args.output_dir, 'constids.txt'), 'w') as f:
+    if args.suffix:
+        fname = 'constids-{}.txt'.format(args.suffix)
+    else:
+        fname = 'constids.txt'
+
+    with open(os.path.join(args.output_dir, fname), 'w') as f:
         for s in const_ids.values[1:]:
             print('X({})'.format(s), file=f)
 

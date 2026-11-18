@@ -2,6 +2,7 @@
 global_buffer_bels:
 - BUFG
 - BUFGCTRL
+- BUFGCE
 - VCC
 - GND
 # Which cell names are global buffers, and which pins should use dedicated routing resources
@@ -17,12 +18,22 @@ global_buffer_cells:
     pins:
       - name: I0
         guide_placement: true
-        max_hops: 10
+        max_hops: 32
       - name: I1
         guide_placement: true
-        max_hops: 10
+        max_hops: 32
       - name: O
-        force_dedicated_routing: true
+        force_dedicated_routing: true # dedicated routing reaches only up to the interconnect before BUFCE_LEAF
+        max_hops: 32
+  - cell: BUFGCE
+    pins:
+      - name: I
+        guide_placement: true
+        max_hops: 32
+      - name: O
+        force_dedicated_routing: true # dedicated routing reaches only up to the interconnect before BUFCE_LEAF
+        max_hops: 32
+      
 # How should nextpnr lump BELs during analytic placement?
 buckets:
 - bucket: FLIP_FLOPS
@@ -81,7 +92,6 @@ buckets:
 #        using pseudo PIPs through LUTs. For now disable them
 disabled_routethroughs:
   - BUFGCTRL
-  - BUFCE
   - OUTINV
   - A6LUT
   - B6LUT
@@ -134,3 +144,200 @@ disabled_site_pips:
      - H6LUT
     ipin: A6
     opin: O6
+
+clusters:
+- name: LUTFF
+  root_cell_types:
+    - FDCE
+    - FDPE
+    - FDRE
+    - FDSE
+  cluster_cells:
+    - cells:
+      - LUT1
+      - LUT2
+      - LUT3
+      - LUT4
+      - LUT5
+      - LUT6
+      ports:
+      - D
+
+macro_clusters:
+- name: RAM32X1S
+  sites:
+  - site: SLICEM
+    cells:
+    - { cell: SP, bels: [H6LUT] }
+- name: RAM32X1D
+  sites:
+  - site: SLICEM
+    cells:
+    - { cell: SP, bels: [H6LUT] }
+    - { cell: DP, bels: [G6LUT] }
+- name: RAM32X16DR8
+  sites:
+  - site: SLICEM
+    cells:
+    - { cell: RAMH_D1, bels: [H6LUT] }
+    - { cell: RAMG_D1, bels: [G6LUT] }
+    - { cell: RAMF_D1, bels: [F6LUT] }
+    - { cell: RAME_D1, bels: [E6LUT] }
+    - { cell: RAMD_D1, bels: [D6LUT] }
+    - { cell: RAMC_D1, bels: [C6LUT] }
+    - { cell: RAMB_D1, bels: [B6LUT] }
+    - { cell: RAMA_D1, bels: [A6LUT] }
+    - { cell: RAMH, bels: [H5LUT] }
+    - { cell: RAMG, bels: [G5LUT] }
+    - { cell: RAMF, bels: [F5LUT] }
+    - { cell: RAME, bels: [E5LUT] }
+    - { cell: RAMD, bels: [D5LUT] }
+    - { cell: RAMC, bels: [C5LUT] }
+    - { cell: RAMB, bels: [B5LUT] }
+    - { cell: RAMA, bels: [A5LUT] }
+- name: RAM32M
+  sites:
+  - site: SLICEM
+    cells:
+    - { cell: RAMD_D1, bels: [H6LUT] }
+    - { cell: RAMC_D1, bels: [G6LUT] }
+    - { cell: RAMB_D1, bels: [F6LUT] }
+    - { cell: RAMA_D1, bels: [E6LUT] }
+    - { cell: RAMD, bels: [H5LUT] }
+    - { cell: RAMC, bels: [G5LUT] }
+    - { cell: RAMB, bels: [F5LUT] }
+    - { cell: RAMA, bels: [E5LUT] }
+- name: RAM32M16
+  sites:
+  - site: SLICEM
+    cells:
+    - { cell: RAMH_D1, bels: [H6LUT] }
+    - { cell: RAMG_D1, bels: [G6LUT] }
+    - { cell: RAMF_D1, bels: [F6LUT] }
+    - { cell: RAME_D1, bels: [E6LUT] }
+    - { cell: RAMD_D1, bels: [D6LUT] }
+    - { cell: RAMC_D1, bels: [C6LUT] }
+    - { cell: RAMB_D1, bels: [B6LUT] }
+    - { cell: RAMA_D1, bels: [A6LUT] }
+    - { cell: RAMH, bels: [H5LUT] }
+    - { cell: RAMG, bels: [G5LUT] }
+    - { cell: RAMF, bels: [F5LUT] }
+    - { cell: RAME, bels: [E5LUT] }
+    - { cell: RAMD, bels: [D5LUT] }
+    - { cell: RAMC, bels: [C5LUT] }
+    - { cell: RAMB, bels: [B5LUT] }
+    - { cell: RAMA, bels: [A5LUT] }
+- name: RAM64X1S
+  sites:
+  - site: SLICEM
+    cells:
+    - { cell: SP, bels: [H6LUT] }
+- name: RAM64X2S
+  sites:
+  - site: SLICEM
+    cells:
+    - { cell: RAM64X1S0/SP, bels: [H6LUT] }
+    - { cell: RAM64X1S1/SP, bels: [G6LUT] }
+- name: RAM64X1D
+  sites:
+  - site: SLICEM
+    cells:
+    - { cell: SP, bels: [H6LUT] }
+    - { cell: DP, bels: [G6LUT] }
+- name: RAM64M
+  sites:
+  - site: SLICEM
+    cells:
+    - { cell: RAMD, bels: [H6LUT] }
+    - { cell: RAMC, bels: [G6LUT] }
+    - { cell: RAMB, bels: [F6LUT] }
+    - { cell: RAMA, bels: [E6LUT] }
+- name: RAM64M8
+  sites:
+  - site: SLICEM
+    cells:
+    - { cell: RAMH, bels: [H6LUT] }
+    - { cell: RAMG, bels: [G6LUT] }
+    - { cell: RAMF, bels: [F6LUT] }
+    - { cell: RAME, bels: [E6LUT] }
+    - { cell: RAMD, bels: [D6LUT] }
+    - { cell: RAMC, bels: [C6LUT] }
+    - { cell: RAMB, bels: [B6LUT] }
+    - { cell: RAMA, bels: [A6LUT] }
+- name: RAM64X8SW
+  sites:
+  - site: SLICEM
+    cells:
+    - { cell: RAMS64E1_H, bels: [H6LUT] }
+    - { cell: RAMS64E1_G, bels: [G6LUT] }
+    - { cell: RAMS64E1_F, bels: [F6LUT] }
+    - { cell: RAMS64E1_E, bels: [E6LUT] }
+    - { cell: RAMS64E1_D, bels: [D6LUT] }
+    - { cell: RAMS64E1_C, bels: [C6LUT] }
+    - { cell: RAMS64E1_B, bels: [B6LUT] }
+    - { cell: RAMS64E1_A, bels: [A6LUT] }
+- name: RAM128X1S
+  sites:
+  - site: SLICEM
+    cells:
+    - { cell: LOW, bels: [H6LUT] }
+    - { cell: HIGH, bels: [G6LUT] }
+    - { cell: F7, bels: [F7MUX_GH] }
+- name: RAM128X1D
+  sites:
+  - site: SLICEM
+    cells:
+    - { cell: SP.LOW, bels: [H6LUT] }
+    - { cell: SP.HIGH, bels: [G6LUT] }
+    - { cell: DP.LOW, bels: [F6LUT] }
+    - { cell: DP.HIGH, bels: [E6LUT] }
+    - { cell: F7.SP, bels: [F7MUX_GH] }
+    - { cell: F7.DP, bels: [F7MUX_EF] }
+- name: RAM256X1S
+  sites:
+  - site: SLICEM
+    cells:
+    - { cell: RAMS64E_D, bels: [H6LUT] }
+    - { cell: RAMS64E_C, bels: [G6LUT] }
+    - { cell: RAMS64E_B, bels: [F6LUT] }
+    - { cell: RAMS64E_A, bels: [E6LUT] }
+    - { cell: F7.A, bels: [F7MUX_EF] }
+    - { cell: F7.B, bels: [F7MUX_GH] }
+    - { cell: F8, bels: [F8MUX_TOP] }
+- name: RAM256X1D
+  sites:
+  - site: SLICEM
+    cells:
+    - { cell: SP.A, bels: [H6LUT] }
+    - { cell: SP.B, bels: [G6LUT] }
+    - { cell: SP.C, bels: [F6LUT] }
+    - { cell: SP.D, bels: [E6LUT] }
+    - { cell: DP.A, bels: [D6LUT] }
+    - { cell: DP.B, bels: [C6LUT] }
+    - { cell: DP.C, bels: [B6LUT] }
+    - { cell: DP.D, bels: [A6LUT] }
+    - { cell: F7.SPA, bels: [F7MUX_GH] }
+    - { cell: F7.SPB, bels: [F7MUX_EF] }
+    - { cell: F7.DPA, bels: [F7MUX_CD] }
+    - { cell: F7.DPB, bels: [F7MUX_AB] }
+    - { cell: F8.SP, bels: [F8MUX_TOP] }
+    - { cell: F8.DP, bels: [F8MUX_BOT] }
+- name: RAM512X1S
+  sites:
+  - site: SLICEM
+    cells:
+    - { cell: RAMS64E1_H, bels: [H6LUT] }
+    - { cell: RAMS64E1_G, bels: [G6LUT] }
+    - { cell: RAMS64E1_F, bels: [F6LUT] }
+    - { cell: RAMS64E1_E, bels: [E6LUT] }
+    - { cell: RAMS64E1_D, bels: [D6LUT] }
+    - { cell: RAMS64E1_C, bels: [C6LUT] }
+    - { cell: RAMS64E1_B, bels: [B6LUT] }
+    - { cell: RAMS64E1_A, bels: [A6LUT] }
+    - { cell: F7.A, bels: [F7MUX_AB] }
+    - { cell: F7.B, bels: [F7MUX_CD] }
+    - { cell: F7.C, bels: [F7MUX_EF] }
+    - { cell: F7.D, bels: [F7MUX_GH] }
+    - { cell: F8.A, bels: [F8MUX_BOT] }
+    - { cell: F8.B, bels: [F8MUX_TOP] }
+    - { cell: F9, bels: [F9MUX] }

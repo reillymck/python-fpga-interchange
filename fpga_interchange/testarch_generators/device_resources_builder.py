@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2020  The SymbiFlow Authors.
+# Copyright (C) 2020  The F4PGA Authors.
 #
 # Use of this source code is governed by a ISC-style
 # license that can be found in the LICENSE file or at
@@ -42,11 +42,18 @@ class PackagePin():
         self.bel_name = bel_name
 
 
+class PackageGrade():
+    def __init__(self, name, speed, temp):
+        self.name = name
+        self.speed = speed
+        self.temp = temp
+
+
 class Package():
     def __init__(self, name):
         self.name = name
         self.pins = {}
-        # TODO: Speed grades
+        self.grades = [PackageGrade("-1", "-1", "c")]
 
     def add_pin(self, name, site_name, bel_name):
         """
@@ -57,9 +64,9 @@ class Package():
 
 
 class CellBelMappingEntry():
-    def __init__(self, site_type, bel, pin_map, delay_mapping=[]):
+    def __init__(self, site_type, bels, pin_map, delay_mapping=[]):
         self.site_type = site_type
-        self.bel = bel
+        self.bels = bels
         self.pin_map = pin_map  # dict(cell_pin) -> bel_pin
         self.delays = delay_mapping
 
@@ -141,6 +148,15 @@ class SiteWire():
         self.bel_pins.add(bel_pin)
 
 
+class LutBel():
+    def __init__(self, name, input_pins, output_pin, low_bit, high_bit):
+        self.name = name
+        self.input_pins = input_pins
+        self.output_pin = output_pin
+        self.low_bit = low_bit
+        self.high_bit = high_bit
+
+
 class SitePip():
     def __init__(self,
                  src_bel_pin,
@@ -161,6 +177,7 @@ class SiteType():
         self.bels = {}  # dict(name) -> Bel
         self.pips = set()
         self.wires = {}  # dict(name) -> SiteWire
+        self.lut_elements = []
 
 
 #        self.alt_site_types = []
@@ -225,6 +242,12 @@ class SiteType():
 
         return pip
 
+    def add_lut_element(self, width, lut_bels):
+        self.lut_elements.append((
+            width,
+            tuple(lut_bels),
+        ))
+
 
 class SiteTypeInTileType():
     def __init__(self, ref, type):
@@ -235,13 +258,20 @@ class SiteTypeInTileType():
         self.alt_pins_to_primary_pins = {}
 
 
+class PseudoCell():
+    def __init__(self, bel, bel_pins):
+        self.bel = bel
+        self.bel_pins = bel_pins
+
+
 class PIP():
     def __init__(self,
                  wire0,
                  wire1,
                  delay_type,
                  is_buffered20=True,
-                 is_buffered21=True):
+                 is_buffered21=True,
+                 pseudo_cells=None):
         self.wire0 = wire0
         self.wire1 = wire1
 
@@ -249,9 +279,9 @@ class PIP():
         self.is_buffered20 = is_buffered20  # TODO:
         self.is_buffered21 = is_buffered21
 
-        self.delay_type = delay_type
+        self.pseudo_cells = pseudo_cells
 
-        # TODO: Pseudo cells
+        self.delay_type = delay_type
 
 
 class TileType():
@@ -294,11 +324,13 @@ class TileType():
                 wire1,
                 delay_type,
                 is_buffered20=True,
-                is_buffered21=True):
+                is_buffered21=True,
+                pseudo_cells=None):
         """
         Adds a new PIP to the tile type
         """
-        pip = PIP(wire0, wire1, delay_type, is_buffered20, is_buffered21)
+        pip = PIP(wire0, wire1, delay_type, is_buffered20, is_buffered21,
+                  pseudo_cells)
         assert pip not in self.pips, pip
         self.pips.add(pip)
 
@@ -353,8 +385,8 @@ Wire = namedtuple("Wire", "tile wire wire_type")
 
 
 class DeviceResources():
-    def __init__(self):
-        self.name = ""
+    def __init__(self, name):
+        self.name = name
 
         # Site and tile types
         self.site_types = {}
@@ -382,6 +414,9 @@ class DeviceResources():
 
         # Constant generators
         self.constants = {}
+        self.default_constant = ConstantType.NO_PREFERENCE
+        self.gnd_cell_pin = ("GND", "G")
+        self.vcc_cell_pin = ("VCC", "V")
 
         # Nodes
         self.nodes = []
@@ -401,6 +436,8 @@ class DeviceResources():
 
         # Parameter definitions
         self.parameters = {}
+        self.lut_cells = []
+        self.lut_elements = []
 
     def add_site_type(self, name):
         """
@@ -571,11 +608,11 @@ class DeviceResources():
         for wire in tile_type.wires:
             self.add_wire(tile_name, wire, tile_type.wire_type[wire])
 
-    def add_const_source(self, site_name, bel_name, bel_port, constant):
-        assert (site_name, bel_name,
-                bel_port) not in self.constants, (site_name, bel_name,
+    def add_const_source(self, site_type, bel_name, bel_port, constant):
+        assert (site_type, bel_name,
+                bel_port) not in self.constants, (site_type, bel_name,
                                                   bel_port)
-        self.constants[(site_name, bel_name, bel_port)] = constant
+        self.constants[(site_type, bel_name, bel_port)] = constant
 
     def add_node(self, wire_ids, node_type):
         """
@@ -607,6 +644,9 @@ class DeviceResources():
             self.parameters[cell_type] = list()
 
         self.parameters[cell_type].append(param)
+
+    def add_lut_cell(self, name, input_pins, eq=None):
+        self.lut_cells.append((name, input_pins, eq))
 
     def print_stats(self):
         """
@@ -740,6 +780,11 @@ class DeviceResourcesCapnp():
             for pin in package.pins.values():
                 self.add_string_id(pin.name)
 
+            for grade in package.grades:
+                self.add_string_id(grade.name)
+                self.add_string_id(grade.speed)
+                self.add_string_id(grade.temp)
+
         # Do not index package pin site and bel names. They should have been
         # already indexed during site processing
 
@@ -754,6 +799,14 @@ class DeviceResourcesCapnp():
             for param in v:
                 self.add_string_id(param.name)
                 self.add_string_id(param.default)
+
+        if self.device.gnd_cell_pin:
+            for name in self.device.gnd_cell_pin:
+                self.add_string_id(name)
+
+        if self.device.vcc_cell_pin:
+            for name in self.device.vcc_cell_pin:
+                self.add_string_id(name)
 
     def write_timings(self, device):
         self.node_timing_map = {}
@@ -797,6 +850,12 @@ class DeviceResourcesCapnp():
         # Write each site type
         device.init("siteTypeList", len(site_type_list))
         for i, site_type in enumerate(site_type_list):
+
+            self.device.lut_elements.append((
+                site_type.name,
+                site_type.lut_elements,
+            ))
+
             site_type_capnp = device.siteTypeList[i]
             site_type_capnp.name = self.get_string_id(site_type.name)
 
@@ -959,7 +1018,16 @@ class DeviceResourcesCapnp():
                 pip_capnp.buffered21 = pip.is_buffered21
                 pip_capnp.timing = self.pip_timing_map[pip.delay_type]
 
-                # TODO: Pseudo cells
+                # Pseudo cells
+                if pip.pseudo_cells:
+                    pip_capnp.init("pseudoCells", len(pip.pseudo_cells))
+                    for j, pcell in enumerate(pip.pseudo_cells):
+                        pcell_capnp = pip_capnp.pseudoCells[j]
+                        pcell_capnp.bel = self.get_string_id(pcell.bel)
+
+                        pcell_capnp.init("pins", len(pcell.bel_pins))
+                        for k, pin in enumerate(pcell.bel_pins):
+                            pcell_capnp.pins[k] = self.get_string_id(pin)
 
             # Index site types
             site_type_list = list(tile_type.site_types.values())
@@ -1076,6 +1144,14 @@ class DeviceResourcesCapnp():
             package_capnp = device.packages[i]
             package_capnp.name = self.get_string_id(package.name)
 
+            package_capnp.init("grades", len(package.grades))
+            for j, grade in enumerate(package.grades):
+                grade_capnp = package_capnp.grades[j]
+
+                grade_capnp.name = self.get_string_id(grade.name)
+                grade_capnp.speedGrade = self.get_string_id(grade.speed)
+                grade_capnp.temperatureGrade = self.get_string_id(grade.temp)
+
             package_capnp.init("packagePins", len(package.pins))
             for j, pin in enumerate(package.pins.values()):
                 pin_capnp = package_capnp.packagePins[j]
@@ -1097,19 +1173,27 @@ class DeviceResourcesCapnp():
         Packs all constant sources/bels objects to the cap'n'proto schema
         """
 
-        device.constants.defaultBestConstant = "noPreference"
+        device.constants.defaultBestConstant = self.device.default_constant.value
+
         device.constants.init("siteSources", len(self.device.constants))
         for i, (key, const) in enumerate(self.device.constants.items()):
             device.constants.siteSources[i].siteType = self.get_string_id(
                 key[0])
             device.constants.siteSources[i].bel = self.get_string_id(key[1])
             device.constants.siteSources[i].belPin = self.get_string_id(key[2])
-            device.constants.siteSources[
-                i].constant = "vcc" if const == "VCC" else "gnd"
-        device.constants.gndCellType = self.get_string_id("GND")
-        device.constants.gndCellPin = self.get_string_id("G")
-        device.constants.vccCellType = self.get_string_id("VCC")
-        device.constants.vccCellPin = self.get_string_id("V")
+            device.constants.siteSources[i].constant = const.value
+
+        if self.device.gnd_cell_pin:
+            device.constants.gndCellType = self.get_string_id(
+                self.device.gnd_cell_pin[0])
+            device.constants.gndCellPin = self.get_string_id(
+                self.device.gnd_cell_pin[1])
+
+        if self.device.vcc_cell_pin:
+            device.constants.vccCellType = self.get_string_id(
+                self.device.vcc_cell_pin[0])
+            device.constants.vccCellPin = self.get_string_id(
+                self.device.vcc_cell_pin[1])
 
     def write_cell_bel_mappings(self, device):
         """
@@ -1149,10 +1233,11 @@ class DeviceResourcesCapnp():
                 if entry.site_type not in entries[key]:
                     entries[key][entry.site_type] = []
 
-                entries[key][entry.site_type].append(entry.bel)
+                entries[key][entry.site_type].extend(entry.bels)
                 site_type = site_name_siteType[entry.site_type]
-                delays.extend(
-                    [(site_type, entry.bel, delay) for delay in entry.delays])
+                for bel in entry.bels:
+                    delays.extend(
+                        [(site_type, bel, delay) for delay in entry.delays])
 
             # Encode
             cell_bel_mapping_capnp.init("commonPins", len(entries))
@@ -1232,6 +1317,39 @@ class DeviceResourcesCapnp():
                 param_def.default.key = self.get_string_id(param.name)
                 param_def.default.textValue = self.get_string_id(param.default)
 
+    def write_lut_definitions(self, device):
+        device.lutDefinitions.init("lutCells", len(self.device.lut_cells))
+        for i, (name, input_pins, eq) in enumerate(self.device.lut_cells):
+            lut_cell = device.lutDefinitions.lutCells[i]
+            lut_cell.cell = name
+            lut_cell.init("inputPins", len(input_pins))
+            for i, pin in enumerate(input_pins):
+                lut_cell.inputPins[i] = pin
+            if eq is not None:
+                lut_cell.equation.initParam = eq
+            else:
+                lut_cell.equation.invalid = None
+
+        device.lutDefinitions.init("lutElements",
+                                   len(self.device.lut_elements))
+        for i, (site, luts) in enumerate(self.device.lut_elements):
+            lut_element = device.lutDefinitions.lutElements[i]
+            lut_element.site = site
+            lut_element.init("luts", len(luts))
+            for j, (width, bels) in enumerate(luts):
+                lut = lut_element.luts[j]
+                lut.width = width
+                lut.init("bels", len(bels))
+                for k, lut_bel in enumerate(bels):
+                    bel = lut.bels[k]
+                    bel.name = lut_bel.name
+                    bel.outputPin = lut_bel.output_pin
+                    bel.lowBit = lut_bel.low_bit
+                    bel.highBit = lut_bel.high_bit
+                    bel.init("inputPins", len(lut_bel.input_pins))
+                    for l, input_pin in enumerate(lut_bel.input_pins):
+                        bel.inputPins[l] = input_pin
+
     def to_capnp(self):
         """
         Encodes stuff into a cap'n'proto message.
@@ -1268,6 +1386,7 @@ class DeviceResourcesCapnp():
 
         # Device packages
         self.write_parameters(device)
+        self.write_lut_definitions(device)
 
         # Logical netlist containing primitives and macros
         # Fix names, as logical network should use string IDs from global string table, see issue #47
